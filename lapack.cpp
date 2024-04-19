@@ -2,7 +2,7 @@
 #include <vector>
 #include <tuple>
 #include <lapacke.h>  // Ensure you have the right header for your setup
-
+// g++ -o 2i 2i.cpp -std=c++17 -I/opt/homebrew/Cellar/lapack/3.12.0/include -L/opt/homebrew/lib -llapacke -llapack -lblas
 namespace sjc {
     // Simple vector class for eigenvalues
     class vec {
@@ -22,7 +22,7 @@ namespace sjc {
         double* access_raw_pointer() { return data.data(); }
         size_t get_rows() const { return rows; }
         size_t get_cols() const { return cols; }
-    };
+};
 }
 
 // Wrapper function to diagonalize real symmetric matrices
