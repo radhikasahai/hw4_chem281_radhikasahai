@@ -1,84 +1,76 @@
-
-
 #include <vector>
-#include <stdexcept>
 #include <iostream>
-#include <cassert>
 
-template <typename T>
 class DenseMatrix {
 private:
-    std::vector<std::vector<T>> mat;
-    size_t rows, cols;
+    std::vector<std::vector<double> > data;
+    int numRows;
+    int numCols;
 
 public:
     // Constructors
-    DenseMatrix(size_t m, size_t n) : rows(m), cols(n), mat(m, std::vector<T>(n, T())) {}
+    DenseMatrix() : numRows(0), numCols(0) {}
 
-    // Access elements using bounds-checked method
-    std::vector<T>& operator[](size_t i) { return mat.at(i); }
-    const std::vector<T>& operator[](size_t i) const { return mat.at(i); }
-
-    // Bounds-checked access
-    std::vector<T>& at(size_t i) {
-        return mat.at(i);
+    DenseMatrix(int rows, int cols, double value = 0.0) : numRows(rows), numCols(cols) {
+        data.resize(rows, std::vector<double>(cols, value));
     }
 
-    const std::vector<T>& at(size_t i) const {
-        return mat.at(i);
+    // Destructor
+    ~DenseMatrix() {}
+
+    // Function to get the number of rows
+    int getNumRows() const {
+        return numRows;
     }
 
-    // Get dimensions
-    size_t get_rows() const { return rows; }
-    size_t get_columns() const { return cols; }
+    // Function to get the number of columns
+    int getNumCols() const {
+        return numCols;
+    }
 
-    void resize(size_t m, size_t n) {
-        if (m < rows) {
-            mat.resize(m);  // Trims excess rows
-        } else if (m > rows) {
-            mat.resize(m, std::vector<T>(cols, T()));  // Adds new rows with existing column size
-        }
-        rows = m;
+    // Function to access elements by indices
+    double& operator()(int row, int col) {
+        return data[row][col];
+    }
 
-        for (auto& row : mat) {
-            if (n < cols) {
-                row.resize(n);  // Trims excess columns
-            } else if (n > cols) {
-                row.resize(n, T());  // Expands each row to new column size, initializing new elements
+    // Function to access elements by indices (const version)
+    const double& operator()(int row, int col) const {
+        return data[row][col];
+    }
+
+    // Function to resize the matrix
+    void resize(int rows, int cols, double value = 0.0) {
+        data.resize(rows, std::vector<double>(cols, value));
+        numRows = rows;
+        numCols = cols;
+    }
+
+    // Function to clear the matrix
+    void clear() {
+        data.clear();
+        numRows = 0;
+        numCols = 0;
+    }
+
+    // Function to print the matrix
+    void print() const {
+        for (int i = 0; i < numRows; ++i) {
+            for (int j = 0; j < numCols; ++j) {
+                std::cout << data[i][j] << " ";
             }
+            std::cout << std::endl;
         }
-        cols = n;
     }
 };
 
-int main() {
-    DenseMatrix<int> mat(3, 4);
-    assert(mat.get_rows() == 3);
-    assert(mat.get_columns() == 4);
 
-    mat[0][0] = 1;
-    mat[0][1] = 2;
-    mat[1][0] = 3;
-    mat[2][3] = 4;
-    assert(mat[0][0] == 1);
-    assert(mat[0][1] == 2);
-    assert(mat[1][0] == 3);
-    assert(mat[2][3] == 4);
+// int main() {
+//     // Create a 5x5 matrix of 0s
+//     DenseMatrix matrix(5, 5);
 
-    // Proper out-of-bounds access check using at()
-    try {
-        int test = mat.at(3).at(4);  // Should throw std::out_of_range
-    } catch (const std::out_of_range& e) {
-        std::cout << "Out-of-bounds access caught correctly: " << e.what() << std::endl;
-    }
+//     // Print the matrix
+//     std::cout << "Matrix of zeros:" << std::endl;
+//     matrix.print();
 
-    mat.resize(5, 5);
-    assert(mat.get_rows() == 5);
-    assert(mat.get_columns() == 5);
-    mat[4][4] = 5;
-    assert(mat[4][4] == 5);
-
-    std::cout << "All tests passed!" << std::endl;
-
-    return 0;
-}
+//     return 0;
+// }
