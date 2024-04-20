@@ -1,5 +1,7 @@
 #include <vector>
 #include <iostream>
+#include "vector.h"
+#include "denseMatrix.h"
 
 // Struct to represent non-zero elements in a row
 struct RowElement {
@@ -9,7 +11,7 @@ struct RowElement {
 
 class SparseMatrix {
 private:
-    std::vector<std::vector<RowElement>> data; // Underlying data structure
+    std::vector<std::vector<RowElement> > data; // Underlying data structure
     std::vector<double> diagonal; // Dense vector for diagonal elements
     int numRows;
     int numCols;
@@ -21,15 +23,26 @@ public:
         diagonal.resize(rows, 0.0);
     }
 
-    // Function to insert non-zero element into the matrix
+    // // Function to insert non-zero element into the matrix
+    // void insert(int i, int j, double value) {
+    //     if (value != 0.0) {
+    //         data[i].push_back({j, value}); // Insert non-zero element
+    //         if (i == j) { //if same then diagonal 
+    //             diagonal[i] = value; // Store diagonal elements separately
+    //         }
+    //     }
+    // }
     void insert(int i, int j, double value) {
-        if (value != 0.0) {
-            data[i].push_back({j, value}); // Insert non-zero element
-            if (i == j) { //if same then diagonal 
-                diagonal[i] = value; // Store diagonal elements separately
-            }
+    if (value != 0.0) {
+        RowElement element;
+        element.j = j;
+        element.d = value;
+        data[i].push_back(element); // Insert non-zero element
+        if (i == j) { //if same then diagonal 
+            diagonal[i] = value; // Store diagonal elements separately
         }
     }
+}
 
     // Function to get the number of rows
     int getNumRows() const {
@@ -84,3 +97,30 @@ public:
         return dense;
     }
 };
+
+
+int main() {
+    // Create a sparse matrix with 3 rows and 3 columns
+    SparseMatrix sparse(3, 3);
+
+    // Insert some non-zero elements
+    sparse.insert(0, 0, 1.0); // Element at (0, 0)
+    sparse.insert(1, 1, 2.0); // Element at (1, 1)
+    sparse.insert(2, 2, 3.0); // Element at (2, 2)
+
+    // Access and print the elements of the sparse matrix
+    for (int i = 0; i < sparse.getNumRows(); ++i) {
+        for (int j = 0; j < sparse.getNumCols(); ++j) {
+            std::cout << sparse(i, j) << " ";
+        }
+        std::cout << std::endl;
+    }
+
+    // Convert the sparse matrix to a dense matrix
+    DenseMatrix dense = sparse;
+
+    // Print the dense matrix
+    dense.print();
+
+    return 0;
+}
