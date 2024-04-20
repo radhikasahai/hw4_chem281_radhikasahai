@@ -1,79 +1,86 @@
-
-#include <iostream>
-#include <cassert>
 #include <vector>
-#include <list>
-#include <stdexcept>
+#include <iostream>
 
-
-template <typename T>
-class MyVector {
-public:
-    std::vector<T> data;
-
-    MyVector(size_t n = 0, T value = T()) : data(n, value) {}
-
-    T& operator[](size_t i) { return data[i]; }
-    const T& operator[](size_t i) const { return data[i]; }
-
-    size_t size() const { return data.size(); }
+// Struct to represent non-zero elements in a row
+struct RowElement {
+    int j; // Column index
+    double d; // Value
 };
 
-template <typename T>
 class SparseMatrix {
 private:
-    struct Element {
-        int col;
-        T value;
-    };
-
-    std::vector<std::list<Element>> rows;
-    size_t num_rows, num_cols;
+    std::vector<std::vector<RowElement>> data; // Underlying data structure
+    std::vector<double> diagonal; // Dense vector for diagonal elements
+    int numRows;
+    int numCols;
 
 public:
-    SparseMatrix(size_t m, size_t n) : num_rows(m), num_cols(n), rows(m) {}
-
-    void insert(size_t i, size_t j, T val) {
-        if (i >= num_rows || j >= num_cols) throw std::out_of_range("Index out of bounds.");
-        rows[i].push_back({static_cast<int>(j), val});  // Corrected line
+    // Constructors
+    SparseMatrix(int rows, int cols) : numRows(rows), numCols(cols) {
+        data.resize(rows);
+        diagonal.resize(rows, 0.0);
     }
 
-    size_t get_rows() const { return num_rows; }
-    size_t get_columns() const { return num_cols; }
-
-    MyVector<T> operator*(const MyVector<T>& vec) const {
-        MyVector<T> result(num_rows, T());
-        for (size_t i = 0; i < num_rows; ++i) {
-            T sum = T();
-            for (const auto& e : rows[i]) {
-                sum += e.value * vec[e.col];
+    // Function to insert non-zero element into the matrix
+    void insert(int i, int j, double value) {
+        if (value != 0.0) {
+            data[i].push_back({j, value}); // Insert non-zero element
+            if (i == j) { //if same then diagonal 
+                diagonal[i] = value; // Store diagonal elements separately
             }
+        }
+    }
+
+    // Function to get the number of rows
+    int getNumRows() const {
+        return numRows;
+    }
+
+    // Function to get the number of columns
+    int getNumCols() const {
+        return numCols;
+    }
+
+    // Function to access data in the matrix
+    double operator()(int i, int j) const {
+        if (i == j) {
+            return diagonal[i]; // Return diagonal element
+        } else {
+            // Search for non-zero element in the row
+            for (const RowElement& element : data[i]) {
+                if (element.j == j) {
+                    return element.d;
+                }
+            }
+            return 0.0; // If no non-zero element found
+        }
+    }
+
+    // Function to apply the sparse matrix to a vector
+    std::vector<double> apply(const std::vector<double>& vector) const { // vector of dot product of input against each row 
+        //we have to assume that "vector" is of length of num rows or cols
+
+        std::vector<double> result(numRows);
+        for (int i = 0; i < numRows; ++i) {
+            double sum = 0.0;
+            for (const RowElement& element : data[i]) {
+                sum += element.d * vector[element.j];
+            }
+            sum += diagonal[i] * vector[i];
             result[i] = sum;
         }
         return result;
     }
+
+    // Implicit conversion operator to dense matrix
+    operator DenseMatrix() const {
+        DenseMatrix dense(numRows, numCols);
+        for (int i = 0; i < numRows; ++i) {
+            for (const RowElement& element : data[i]) {
+                dense(i, element.j) = element.d;
+            }
+            dense(i, i) = diagonal[i];
+        }
+        return dense;
+    }
 };
-
-int main() {
-    SparseMatrix<int> mat(3, 3);
-    mat.insert(0, 0, 1);
-    mat.insert(0, 1, 2);
-    mat.insert(1, 0, 3);
-    mat.insert(2, 2, 4);
-
-    assert(mat.get_rows() == 3);
-    assert(mat.get_columns() == 3);
-
-    MyVector<int> vec(3);
-    vec[0] = 1;
-    vec[1] = 2;
-    vec[2] = 3;
-
-    MyVector<int> result = mat * vec;
-    assert(result[0] == 5);   // 1*1 + 2*2
-    assert(result[1] == 3);   // 3*1
-    assert(result[2] == 12);  // 4*3
-
-    std::cout << "All tests passed!" << std::endl;
-    return 0;
-}
