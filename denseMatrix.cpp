@@ -1,7 +1,5 @@
 #include <vector>
 #include <iostream>
-#include "vector.h"
-#include "denseMatrix.h"
 
 class DenseMatrix {
 private:
@@ -66,13 +64,13 @@ public:
 };
 
 
-// int main() {
-//     // Create a 5x5 matrix of 0s
-//     DenseMatrix matrix(5, 5);
+int main() {
+    // Create a 5x5 matrix of 0s
+    DenseMatrix matrix(5, 5);
 
-//     // Print the matrix
-//     std::cout << "Matrix of zeros:" << std::endl;
-//     matrix.print();
+    // Print the matrix
+    std::cout << "Matrix of zeros:" << std::endl;
+    matrix.print();
 
-//     return 0;
-// }
+    return 0;
+}
