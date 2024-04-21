@@ -369,6 +369,21 @@ void lanczos(SparseMatrix &H, int k) { //reference to H matrix
             alpha = q.dot(r);
         }
     }
+
+    //Diagonilze Tridigonal Matrix thingy 
+
+    // Compute eigenvalues and eigenvectors
+    try {
+        auto [E, Q] = solve_eigensystem(T);
+        std::cout << "Eigenvalues: ";
+        for (int i = 0; i < E.size(); i++) {
+            std::cout << E.access_raw_pointer()[i] << " ";
+        }
+        std::cout << std::endl;
+    } catch (const std::exception& e) {
+        std::cerr << "Error: " << e.what() << std::endl;
+    }
+
 }   
 
 int main() {
@@ -380,18 +395,6 @@ int main() {
     H.insert(0, 0, 1.0); // Element at (0, 0)
     H.insert(1, 1, 2.0); // Element at (1, 1)
     H.insert(2, 2, 3.0); // Element at (2, 2)
-
-    // // Compute eigenvalues and eigenvectors
-    // try {
-    //     auto [E, Q] = solve_eigensystem(A);
-    //     std::cout << "Eigenvalues: ";
-    //     for (int i = 0; i < E.size(); i++) {
-    //         std::cout << E.access_raw_pointer()[i] << " ";
-    //     }
-    //     std::cout << std::endl;
-    // } catch (const std::exception& e) {
-    //     std::cerr << "Error: " << e.what() << std::endl;
-    // }
 
     // H.randn(H.n_rows, H.n_cols);
     // H.elem(arma::find(arma::randu<arma::sp_mat>(H.n_rows, H.n_cols) > sparsity)).zeros();
