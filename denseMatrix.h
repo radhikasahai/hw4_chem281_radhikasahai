@@ -11,56 +11,29 @@ private:
 
 public:
     // Constructors
-    DenseMatrix() : numRows(0), numCols(0) {}
-
-    DenseMatrix(int rows, int cols, double value = 0.0) : numRows(rows), numCols(cols) {
-        data.resize(rows, std::vector<double>(cols, value));
-    }
+    DenseMatrix();
+    DenseMatrix(int rows, int cols, double value = 0.0);
 
     // Destructor
-    ~DenseMatrix() {}
+    ~DenseMatrix();
 
     // Function to get the number of rows
-    int getNumRows() const {
-        return numRows;
-    }
+    int getNumRows() const;
 
     // Function to get the number of columns
-    int getNumCols() const {
-        return numCols;
-    }
+    int getNumCols() const;
 
     // Function to access elements by indices
-    double& operator()(int row, int col) {
-        return data[row][col];
-    }
-
-    // Function to access elements by indices (const version)
-    const double& operator()(int row, int col) const {
-        return data[row][col];
-    }
+    double& operator()(int row, int col);
+    const double& operator()(int row, int col) const;
 
     // Function to resize the matrix
-    void resize(int rows, int cols, double value = 0.0) {
-        data.resize(rows, std::vector<double>(cols, value));
-        numRows = rows;
-        numCols = cols;
-    }
+    void resize(int rows, int cols, double value = 0.0);
 
     // Function to clear the matrix
-    void clear() {
-        data.clear();
-        numRows = 0;
-        numCols = 0;
-    }
+    void clear();
 
     // Function to print the matrix
-    void print() const {
-        for (int i = 0; i < numRows; ++i) {
-            for (int j = 0; j < numCols; ++j) {
-                std::cout << data[i][j] << " ";
-            }
-            std::cout << std::endl;
-        }
-    }
+    void print() const;
 };
+
