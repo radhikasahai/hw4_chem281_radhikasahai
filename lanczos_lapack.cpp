@@ -58,6 +58,12 @@ public:
         }
     }
 
+    void multiplyInverse(double val) {
+        for (int i = 0; i < data.size(); i++) {
+            data[i] = val / data[i];
+        }
+    }
+
 
     void divide(double val) {
         for (int i = 0; i < data.size(); i++) {
@@ -224,16 +230,25 @@ public:
     }
     
     void insert(int i, int j, double value) {
-    if (value != 0.0) {
-        RowElement element;
-        element.j = j;
-        element.d = value;
-        data[i].push_back(element); // Insert non-zero element
-        if (i == j) { //if same then diagonal 
-            diagonal[i] = value; // Store diagonal elements separately
+        if (value != 0.0) {
+            RowElement element;
+            element.j = j;
+            element.d = value;
+            data[i].push_back(element); // Insert non-zero element
+            if (i == j) { //if same then diagonal 
+                diagonal[i] = value; // Store diagonal elements separately
+            }
         }
     }
-}
+
+    void fillRandom() {
+        for (int i = 0; i < numRows; i++) {
+            for (int j = 0; j < numCols; j++) {
+                double randu = static_cast<double>(rand()) / RAND_MAX;
+                this->insert(i,j,randu);
+            }
+        }
+    }
 
     // Function to get the number of rows
     int getNumRows() const {
@@ -243,6 +258,21 @@ public:
     // Function to get the number of columns
     int getNumCols() const {
         return numCols;
+    }
+
+    // // Function to access data in the matrix
+    double get(int i, int j) const {
+        if (i == j) {
+            return diagonal[i]; // Return diagonal element
+        } else {
+            // Search for non-zero element in the row
+            for (const RowElement& element : data[i]) {
+                if (element.j == j) {
+                    return element.d;
+                }
+            }
+            return 0.0; // If no non-zero element found
+        }
     }
 
     // Function to access data in the matrix
@@ -273,6 +303,32 @@ public:
             sum += diagonal[i] * vector[i];
             result[i] = sum;
         }
+        return result;
+    }
+
+    // Function to apply the sparse matrix to a vector
+    Vector orthogonalize(const Vector vector) const { // vector of dot product of input against each row 
+        //we have to assume that "vector" is of length of num rows or cols
+        Vector result(numRows);
+        result = vector; //set the result to initially be the input vector
+
+        for (int j = 0; j < numCols; j++) {
+            Vector colVec(numRows);
+            for (int i = 0; i < numRows; i++) {
+                colVec[i] = this->get(i,j); 
+
+            }
+            //result -= dot(result, colVec) / (dot(colVec,colVec) * colVec)
+            double term1 = result.dot(colVec); //dot(result, colVec)
+            double term2 = colVec.dot(colVec); //dot(colVec,colVec)
+
+            colVec.multiply(term2); // (dot(colVec,colVec) * colVec)
+            colVec.multiplyInverse(term1); //dot(result, colVec) / (dot(colVec,colVec) * colVec)
+
+            result.subtractVectors(colVec); //result -= dot(result, colVec) / (dot(colVec,colVec) * colVec)
+
+        }
+
         return result;
     }
 
@@ -312,6 +368,37 @@ inline std::tuple<Vector, DenseMatrix> solve_eigensystem(SparseMatrix A) {
     }
 
     return {E, denseA};
+}
+
+void davidson(SparseMatrix &H, int k, int max_iter) {
+    int n  = H.getNumRows();
+
+    SparseMatrix B(n,k);
+    B.fillRandom(); //B w/ random values 
+
+    SparseMatrix B_new(n,k); // B_new is all 0s
+
+    for (int iter = 0; iter < max_iter; iter++) {
+        // Orthogonalize
+        Vector bCol(n);
+        Vector bOrtho(n);
+
+        for (int j = 0; j < k; j++) {
+            //orthogonalize 
+            Vector bCol(n);
+            for (int i = 0; i < n; i++) { 
+                //first get B.col(j)
+                bCol[i] = B(i,j); 
+            }
+            bOrtho = B.orthogonalize(bCol); //calculate bOrtho
+            bCol.norm(); //normalize bCol
+        }
+
+        H.matrixMultiply(B); //make a matrix mult
+
+        // H.matrixMultiply(B.t()); //multiply H again w/ Bt 
+    }
+
 }
 
 void lanczos(SparseMatrix &H, int k) { //reference to H matrix
@@ -400,6 +487,6 @@ int main() {
     // H.elem(arma::find(arma::randu<arma::sp_mat>(H.n_rows, H.n_cols) > sparsity)).zeros();
 
     int k = 3; // Subspace size
-    lanczos(H, k);
+    davidson(H, k, 200);
     return 0;
 }
