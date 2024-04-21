@@ -83,13 +83,23 @@ public:
         }
     }
 
-    void norm() {
+    
+    void multiplyVectors(const Vector& other) {
+        for (int i = 0; i < data.size(); ++i) {
+            data[i] *= other[i];
+        }
+    }
+
+    double magnitude() {
         double sum = 0.0;
         for (int i = 0; i < data.size(); i++) {
             sum += data[i];
         }
-        double magnitude = std::sqrt(sum);
-        this->divide(magnitude);
+       return std::sqrt(std::abs(sum));
+    }
+
+    void norm() {
+        this->divide(this->magnitude());
     }
 
     // Function to compute the dot product with another vector
@@ -315,7 +325,9 @@ void lanczos(SparseMatrix &H, int k) { //reference to H matrix
     Vector x(n); 
     x.randu(); //x is a list of n random nums in a vec 
     x.norm(); //this is q
-    
+
+    Vector q = x; 
+
     Vector r = H.apply(x);
 
     double alpha = x.dot(r);
@@ -323,24 +335,40 @@ void lanczos(SparseMatrix &H, int k) { //reference to H matrix
 
     r.subtractVectors(x);
 
-    // //Lanczos Iterations 
-    // for (int j = 0; j < k; j++) {
+    //Lanczos Iterations 
+    for (int j = 0; j < k; j++) {
+        Vector vCol(n);
 
-    //     V.col(j) = q;
+        // here we need to set every value of the column j as the value in q 
+        for (int i = 0; i < n; i++) { //V.col(j) = q;
+            V.insert(i,j,q[i]); 
+            vCol[i] = V(i,j-1); // get V.col(j-1);
+        }
 
-    //     if (j > 0)
-    //         r -= arma::dot(V.col(j - 1), r) * V.col(j - 1);
+        if (j > 0) {
+            double dot = vCol.dot(r);
+            vCol.multiply(dot);
+            r.subtractVectors(vCol);
+        }
 
-    //     double beta = arma::norm(r);
-    //     T(j, j) = alpha;
+        double beta = r.magnitude();
+        T.insert(j, j, alpha); 
 
-    //     if (j < k - 1) {
-    //         T(j + 1, j) = T(j, j + 1) = beta;
-    //         q = r / beta;
-    //         r = H * q - beta * V.col(j);
-    //         alpha = arma::dot(q, r);
-    //     }
-    // }
+
+        if (j < k - 1) {
+            T.insert(j + 1, j, beta); 
+            T.insert(j, j + 1, beta); 
+
+            r.divide(beta);
+            q = r;
+
+            vCol.multiply(beta);
+            r = H.apply(q);
+            r.subtractVectors(vCol);
+
+            alpha = q.dot(r);
+        }
+    }
 }   
 
 int main() {
