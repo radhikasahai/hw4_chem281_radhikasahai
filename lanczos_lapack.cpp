@@ -191,6 +191,55 @@ public:
         numCols = cols;
     }
 
+    // Function to calculate the magnitude of the matrix
+    double matrixMagnitude() const {
+        double sum_of_squares = 0.0;
+        for (int i = 0; i < numRows; ++i) {
+            for (int j = 0; j < numCols; ++j) {
+                sum_of_squares += data[i][j] * data[i][j];
+            }
+        }
+        return std::sqrt(sum_of_squares);
+    }
+
+    // Matrix multiplication function
+    DenseMatrix subtractMatricies(const DenseMatrix& mat) const {
+        DenseMatrix result(numRows, mat.getNumCols());
+        for (int i = 0; i < numRows; ++i) {
+            for (int j = 0; j < mat.getNumCols(); ++j) {
+                for (int k = 0; k < numCols; ++k) {
+                    result(i, j) = data[i][k] - mat(k, j);
+                }
+            }
+        }
+        return result;
+    }
+
+    // Matrix multiplication function
+    DenseMatrix matrixMultiply(const DenseMatrix& mat) const {
+        DenseMatrix result(numRows, mat.getNumCols());
+        for (int i = 0; i < numRows; ++i) {
+            for (int j = 0; j < mat.getNumCols(); ++j) {
+                for (int k = 0; k < numCols; ++k) {
+                    result(i, j) += data[i][k] * mat(k, j);
+                }
+            }
+        }
+        return result;
+    }
+
+    // Transpose function
+    DenseMatrix transpose() const {
+        DenseMatrix result(numCols, numRows);
+        for (int i = 0; i < numRows; ++i) {
+            for (int j = 0; j < numCols; ++j) {
+                result(j, i) = data[i][j];
+            }
+        }
+        return result;
+    }
+
+
     // Function to clear the matrix
     void clear() {
         data.clear();
@@ -392,12 +441,50 @@ void davidson(SparseMatrix &H, int k, int max_iter) {
             bOrtho = B.orthogonalize(bCol); //calculate bOrtho
             bCol.norm(); //normalize bCol
         }
+        DenseMatrix hDense = H;
+        DenseMatrix bDense = B;
+        DenseMatrix HB(n,k);
+        HB = hDense.matrixMultiply(bDense); //make a matrix mult
 
-        // H.matrixMultiply(B); //make a matrix mult
+        DenseMatrix bT = bDense.transpose();
 
-        // H.matrixMultiply(B.t()); //multiply H again w/ Bt 
+        DenseMatrix K(n,k);
+        K = bT.matrixMultiply(HB);
+
+        auto [E, Q] = solve_eigensystem(K);
+        // E.print();
+        Q.print();
+
+        DenseMatrix bNew(n,k);
+        bNew = bDense;
+
+        bNew.matrixMultiply(Q); //multiply B by the eigenvectors 
+        
+        //subtract bDense from bNew
+        bNew.subtractMatricies(bDense);
+
+        double mag = bNew.matrixMagnitude();
+
+        // Check for convergence
+        if (mag < 1e-3) {
+            std::cout << "Davidson eigenvalues" << std::endl;
+            E.print();
+            std::cout << "Davidson eigenvectors" << std::endl;
+            Q.print();
+            std::cout << "Number of iterations: " << iter << std::endl;
+            break;
+        }
+
+        //update B w/ the new bDense 
+        for (int i = 0; i < n; i++) {
+            for (int j = 0; j < k; j++) {
+                // basically put bDense into B 
+                B.insert(i,j,bDense(i,j));
+            }
+        }
     }
 
+    std::cout << "yo" << std::endl;
 }
 
 void lanczos(SparseMatrix &H, int k) { //reference to H matrix
@@ -486,7 +573,7 @@ int main() {
     // H.elem(arma::find(arma::randu<arma::sp_mat>(H.n_rows, H.n_cols) > sparsity)).zeros();
 
     int k = 3; // Subspace size
-    lanczos(H, k);
-    // davidson(H, k, 200);
+    // lanczos(H, k);
+    davidson(H, k, 10);
     return 0;
 }
