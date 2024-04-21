@@ -12,6 +12,7 @@ void lanczos(const arma::sp_mat& H, int k) {
     arma::vec x = arma::randu<arma::vec>(n);
     arma::vec q = x / arma::norm(x);
     arma::vec r = H * q;
+    
     double alpha = arma::dot(q, r);
     r -= alpha * q;
 

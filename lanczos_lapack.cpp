@@ -4,15 +4,110 @@
 #include <lapacke.h>  
 // g++ -o lanczos_lapack lanczos_lapack.cpp -std=c++17 -I/opt/homebrew/Cellar/lapack/3.12.0/include -L/opt/homebrew/lib -llapacke -llapack -lblas
 
+class Vector {
+private:
+    std::vector<double> data;
 
-class Vector { //Vector object w/ pointer access for lapack
-        std::vector<double> data;
+public:
+    // Constructor
+    Vector() {}
 
-    public:
-        Vector(int n) : data(n) {}
+    // Constructor with initial size and value
+    Vector(int size, double value = 0.0) : data(size, value) {}
 
-        double* access_raw_pointer() { return data.data(); }
-        int size() const { return data.size(); }
+    // Destructor
+    ~Vector() {}
+
+    double* access_raw_pointer() { return data.data(); }
+
+    // Function to get the size of the vector
+    int size() const {
+        return data.size();
+    }
+
+    // Function to access data by index
+    double& operator[](int index) {
+        return data[index];
+    }
+
+    // Function to access data by index (const version)
+    const double& operator[](int index) const {
+        return data[index];
+    }
+
+    // Function to resize the vector
+    void resize(int newSize, double value = 0.0) {
+        data.resize(newSize, value);
+    }
+
+    // Function to clear the vector
+    void clear() {
+        data.clear();
+    }
+
+    void randu() {
+        for (int i = 0; i < data.size(); i++) {
+            double randu = static_cast<double>(rand()) / RAND_MAX;
+            data[i] = randu;
+        }
+    }
+
+    void multiply(double val) {
+        for (int i = 0; i < data.size(); i++) {
+            data[i] *= val;
+        }
+    }
+
+
+    void divide(double val) {
+        for (int i = 0; i < data.size(); i++) {
+            data[i] /= val;
+        }
+    }
+    
+    void add(double val) {
+        for (int i = 0; i < data.size(); i++) {
+            data[i] += val;
+        }
+    }
+    
+    void subtract(double val) {
+        for (int i = 0; i < data.size(); i++) {
+            data[i] -= val;
+        }
+    }
+    
+    void subtractVectors(const Vector& other) {
+        for (int i = 0; i < data.size(); ++i) {
+            data[i] -= other[i];
+        }
+    }
+
+    void norm() {
+        double sum = 0.0;
+        for (int i = 0; i < data.size(); i++) {
+            sum += data[i];
+        }
+        double magnitude = std::sqrt(sum);
+        this->divide(magnitude);
+    }
+
+    // Function to compute the dot product with another vector
+    double dot(const Vector& other) const {
+        double result = 0.0;
+        for (int i = 0; i < data.size(); ++i) {
+            result += data[i] * other[i];
+        }
+        return result;
+    }
+
+    // Function to print the vector
+    void print() const {
+        for (int i = 0; i < data.size(); ++i) {
+            std::cout << data[i] << " ";
+        }
+        std::cout << std::endl;
+    }
 };
 
 class DenseMatrix {
@@ -156,10 +251,10 @@ public:
     }
 
     // Function to apply the sparse matrix to a vector
-    std::vector<double> apply(const std::vector<double>& vector) const { // vector of dot product of input against each row 
+    Vector apply(const Vector vector) const { // vector of dot product of input against each row 
         //we have to assume that "vector" is of length of num rows or cols
 
-        std::vector<double> result(numRows);
+        Vector result(numRows);
         for (int i = 0; i < numRows; ++i) {
             double sum = 0.0;
             for (const RowElement& element : data[i]) {
@@ -209,28 +304,71 @@ inline std::tuple<Vector, DenseMatrix> solve_eigensystem(SparseMatrix A) {
     return {E, denseA};
 }
 
+void lanczos(SparseMatrix &H, int k) { //reference to H matrix
+    int n  = H.getNumRows();
+
+    // Lanczos vectors and tridiagonal matrix
+    SparseMatrix T(k,k);
+    SparseMatrix V(n, k);
+
+    // Initialization
+    Vector x(n); 
+    x.randu(); //x is a list of n random nums in a vec 
+    x.norm(); //this is q
+    
+    Vector r = H.apply(x);
+
+    double alpha = x.dot(r);
+    x.multiply(alpha);
+
+    r.subtractVectors(x);
+
+    // //Lanczos Iterations 
+    // for (int j = 0; j < k; j++) {
+
+    //     V.col(j) = q;
+
+    //     if (j > 0)
+    //         r -= arma::dot(V.col(j - 1), r) * V.col(j - 1);
+
+    //     double beta = arma::norm(r);
+    //     T(j, j) = alpha;
+
+    //     if (j < k - 1) {
+    //         T(j + 1, j) = T(j, j + 1) = beta;
+    //         q = r / beta;
+    //         r = H * q - beta * V.col(j);
+    //         alpha = arma::dot(q, r);
+    //     }
+    // }
+}   
+
 int main() {
-    // Create a symmetric matrix (3x3 for simplicity)
-    // populate that matrix w/ values to test it 
 
     // Create a sparse matrix with 3 rows and 3 columns
-    SparseMatrix A(3, 3);
+    SparseMatrix H(3, 3);
 
     // Insert some non-zero elements
-    A.insert(0, 0, 1.0); // Element at (0, 0)
-    A.insert(1, 1, 2.0); // Element at (1, 1)
-    A.insert(2, 2, 3.0); // Element at (2, 2)
+    H.insert(0, 0, 1.0); // Element at (0, 0)
+    H.insert(1, 1, 2.0); // Element at (1, 1)
+    H.insert(2, 2, 3.0); // Element at (2, 2)
 
-    // Compute eigenvalues and eigenvectors
-    try {
-        auto [E, Q] = solve_eigensystem(A);
-        std::cout << "Eigenvalues: ";
-        for (int i = 0; i < E.size(); i++) {
-            std::cout << E.access_raw_pointer()[i] << " ";
-        }
-        std::cout << std::endl;
-    } catch (const std::exception& e) {
-        std::cerr << "Error: " << e.what() << std::endl;
-    }
+    // // Compute eigenvalues and eigenvectors
+    // try {
+    //     auto [E, Q] = solve_eigensystem(A);
+    //     std::cout << "Eigenvalues: ";
+    //     for (int i = 0; i < E.size(); i++) {
+    //         std::cout << E.access_raw_pointer()[i] << " ";
+    //     }
+    //     std::cout << std::endl;
+    // } catch (const std::exception& e) {
+    //     std::cerr << "Error: " << e.what() << std::endl;
+    // }
+
+    // H.randn(H.n_rows, H.n_cols);
+    // H.elem(arma::find(arma::randu<arma::sp_mat>(H.n_rows, H.n_cols) > sparsity)).zeros();
+
+    int k = 3; // Subspace size
+    lanczos(H, k);
     return 0;
 }
