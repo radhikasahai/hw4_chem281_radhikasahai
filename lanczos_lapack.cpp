@@ -203,24 +203,22 @@ public:
     }
 
     // Matrix multiplication function
-    DenseMatrix subtractMatricies(const DenseMatrix& mat) const {
-        DenseMatrix result(numRows, mat.getNumCols());
+    DenseMatrix subtractMatricies(DenseMatrix& mat) {
+        DenseMatrix result(numRows, numCols);
         for (int i = 0; i < numRows; ++i) {
-            for (int j = 0; j < mat.getNumCols(); ++j) {
-                for (int k = 0; k < numCols; ++k) {
-                    result(i, j) = data[i][k] - mat(k, j);
-                }
+            for (int j = 0; j < numCols; ++j) {
+                result(i,j) = data[i][j] - mat(i, j);
             }
         }
         return result;
     }
 
     // Matrix multiplication function
-    DenseMatrix matrixMultiply(const DenseMatrix& mat) const {
-        DenseMatrix result(numRows, mat.getNumCols());
-        for (int i = 0; i < numRows; ++i) {
-            for (int j = 0; j < mat.getNumCols(); ++j) {
-                for (int k = 0; k < numCols; ++k) {
+    DenseMatrix matrixMultiply(DenseMatrix& mat) {
+        DenseMatrix result(numRows, numCols);
+        for (int i = 0; i < numRows; i++) {
+            for (int j = 0; j < mat.getNumCols(); j++) {
+                for (int k = 0; k < numCols; k++) {
                     result(i, j) += data[i][k] * mat(k, j);
                 }
             }
@@ -396,7 +394,7 @@ public:
 
 
 // Wrapper function to diagonalize real symmetric matrices
-inline std::tuple<Vector, DenseMatrix> solve_eigensystem(DenseMatrix A) {
+inline std::tuple<Vector, DenseMatrix> solve_eigensystem(DenseMatrix &A) {
     const int n = A.getNumRows();
 
     if (n != A.getNumCols()) {
@@ -404,8 +402,6 @@ inline std::tuple<Vector, DenseMatrix> solve_eigensystem(DenseMatrix A) {
     }
 
     Vector E(n);
-
-
     // over her create a dense matrix from the sparse matrix 
     //then get the deep copy 
     
@@ -414,7 +410,6 @@ inline std::tuple<Vector, DenseMatrix> solve_eigensystem(DenseMatrix A) {
     if (info != 0) {
         throw std::runtime_error("LAPACK exited with code " + std::to_string(info));
     }
-
     return {E, A};
 }
 
@@ -452,19 +447,18 @@ void davidson(SparseMatrix &H, int k, int max_iter) {
         K = bT.matrixMultiply(HB);
 
         auto [E, Q] = solve_eigensystem(K);
-        // E.print();
-        Q.print();
 
         DenseMatrix bNew(n,k);
         bNew = bDense;
 
         bNew.matrixMultiply(Q); //multiply B by the eigenvectors 
-        
+
         //subtract bDense from bNew
-        bNew.subtractMatricies(bDense);
+        bNew = bNew.subtractMatricies(bDense);
+
 
         double mag = bNew.matrixMagnitude();
-
+        // std::cout << mag << std::endl;
         // Check for convergence
         if (mag < 1e-3) {
             std::cout << "Davidson eigenvalues" << std::endl;
@@ -483,8 +477,6 @@ void davidson(SparseMatrix &H, int k, int max_iter) {
             }
         }
     }
-
-    std::cout << "yo" << std::endl;
 }
 
 void lanczos(SparseMatrix &H, int k) { //reference to H matrix
@@ -574,6 +566,6 @@ int main() {
 
     int k = 3; // Subspace size
     // lanczos(H, k);
-    davidson(H, k, 10);
+    davidson(H, k, 1);
     return 0;
 }
