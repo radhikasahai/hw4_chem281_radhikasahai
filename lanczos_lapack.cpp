@@ -213,16 +213,22 @@ public:
         return result;
     }
 
-    // Matrix multiplication function
-    DenseMatrix matrixMultiply(DenseMatrix& mat) {
-        DenseMatrix result(numRows, numCols);
-        for (int i = 0; i < numRows; i++) {
-            for (int j = 0; j < mat.getNumCols(); j++) {
-                for (int k = 0; k < numCols; k++) {
-                    result(i, j) += data[i][k] * mat(k, j);
+
+        // Matrix multiplication function
+    DenseMatrix matrixMultiply(const DenseMatrix& other) const {
+        if (numCols != other.getNumRows()) {
+            throw std::invalid_argument("Matrices cannot be multiplied: Invalid dimensions.");
+        }
+
+        DenseMatrix result(numRows, other.getNumCols());
+        for (int i = 0; i < numRows; ++i) {
+            for (int j = 0; j < other.getNumCols(); ++j) {
+                for (int k = 0; k < numCols; ++k) {
+                    result(i, j) += data[i][k] * other(k, j);
                 }
             }
         }
+
         return result;
     }
 
@@ -439,8 +445,11 @@ void davidson(SparseMatrix &H, int k, int max_iter) {
         DenseMatrix hDense = H;
         DenseMatrix bDense = B;
         DenseMatrix HB(n,k);
-        HB = hDense.matrixMultiply(bDense); //make a matrix mult
+        hDense.print();
+        bDense.print();
 
+        HB = hDense.matrixMultiply(bDense); //make a matrix mult
+        HB.print();
         DenseMatrix bT = bDense.transpose();
 
         DenseMatrix K(n,k);
@@ -451,7 +460,7 @@ void davidson(SparseMatrix &H, int k, int max_iter) {
         DenseMatrix bNew(n,k);
         bNew = bDense;
 
-        bNew.matrixMultiply(Q); //multiply B by the eigenvectors 
+        bNew = bNew.matrixMultiply(Q); //multiply B by the eigenvectors 
 
         //subtract bDense from bNew
         bNew = bNew.subtractMatricies(bDense);
