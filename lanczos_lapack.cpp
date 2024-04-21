@@ -347,7 +347,7 @@ public:
 
 
 // Wrapper function to diagonalize real symmetric matrices
-inline std::tuple<Vector, DenseMatrix> solve_eigensystem(SparseMatrix A) {
+inline std::tuple<Vector, DenseMatrix> solve_eigensystem(DenseMatrix A) {
     const int n = A.getNumRows();
 
     if (n != A.getNumCols()) {
@@ -358,16 +358,15 @@ inline std::tuple<Vector, DenseMatrix> solve_eigensystem(SparseMatrix A) {
 
 
     // over her create a dense matrix from the sparse matrix 
-    DenseMatrix denseA = A;
     //then get the deep copy 
     
-    int info = LAPACKE_dsyev(LAPACK_ROW_MAJOR, 'V', 'U', n, denseA.access_raw_pointer(), n, E.access_raw_pointer());
+    int info = LAPACKE_dsyev(LAPACK_ROW_MAJOR, 'V', 'U', n, A.access_raw_pointer(), n, E.access_raw_pointer());
 
     if (info != 0) {
         throw std::runtime_error("LAPACK exited with code " + std::to_string(info));
     }
 
-    return {E, denseA};
+    return {E, A};
 }
 
 void davidson(SparseMatrix &H, int k, int max_iter) {
@@ -394,7 +393,7 @@ void davidson(SparseMatrix &H, int k, int max_iter) {
             bCol.norm(); //normalize bCol
         }
 
-        H.matrixMultiply(B); //make a matrix mult
+        // H.matrixMultiply(B); //make a matrix mult
 
         // H.matrixMultiply(B.t()); //multiply H again w/ Bt 
     }
@@ -461,12 +460,12 @@ void lanczos(SparseMatrix &H, int k) { //reference to H matrix
 
     // Compute eigenvalues and eigenvectors
     try {
-        auto [E, Q] = solve_eigensystem(T);
+        DenseMatrix denseT = T;
+        auto [E, Q] = solve_eigensystem(denseT);
         std::cout << "Eigenvalues: ";
         for (int i = 0; i < E.size(); i++) {
             std::cout << E.access_raw_pointer()[i] << " ";
         }
-        std::cout << std::endl;
     } catch (const std::exception& e) {
         std::cerr << "Error: " << e.what() << std::endl;
     }
@@ -487,6 +486,7 @@ int main() {
     // H.elem(arma::find(arma::randu<arma::sp_mat>(H.n_rows, H.n_cols) > sparsity)).zeros();
 
     int k = 3; // Subspace size
-    davidson(H, k, 200);
+    lanczos(H, k);
+    // davidson(H, k, 200);
     return 0;
 }
