@@ -2,7 +2,9 @@
 #include <vector>
 #include <tuple>
 #include <lapacke.h>  
-// g++ -o 2i 2i.cpp -std=c++17 -I/opt/homebrew/Cellar/lapack/3.12.0/include -L/opt/homebrew/lib -llapacke -llapack -lblas
+// g++ -o lapack lapack.cpp -std=c++17 -I/opt/homebrew/Cellar/lapack/3.12.0/include -L/opt/homebrew/lib -llapacke -llapack -lblas
+
+
 namespace sjc {
     // Simple vector class for eigenvalues
     class vec {
