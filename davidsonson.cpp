@@ -29,7 +29,7 @@ public:
                 orthogonalize(B.col(i), B);
                 B.col(i) = B.col(i) / arma::norm(B.col(i));
             }
-
+    
             // Matrix-vector product
             arma::mat HB = H * B;
 

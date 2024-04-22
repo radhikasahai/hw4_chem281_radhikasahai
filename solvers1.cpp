@@ -2,10 +2,10 @@
 #include <vector>
 #include <tuple>
 #include <random>
-#include <lapacke.h>  
+#include <lapacke.h>
 #include "utils.h"
 
-// g++ -o solvers solvers.cpp -std=c++17 -I/opt/homebrew/Cellar/lapack/3.12.0/include -L/opt/homebrew/lib -llapacke -llapack -lblas
+// g++ -o solvers1 solvers1.cpp -std=c++17 -I/opt/homebrew/Cellar/lapack/3.12.0/include -L/opt/homebrew/lib -llapacke -llapack -lblas
 
 void davidson(SparseMatrix &H, int k, int max_iter, std::vector<double> &eigenvalues) {
     int n  = H.getNumRows();
@@ -68,9 +68,9 @@ void davidson(SparseMatrix &H, int k, int max_iter, std::vector<double> &eigenva
         // Check for convergence
         if (mag < 1e-3) {
             std::cout << "Davidson eigenvalues" << std::endl;
-            E.print();
+            //E.print();
             std::cout << "Davidson eigenvectors" << std::endl;
-            Q.print();
+            //Q.print();
             std::cout << "Number of iterations: " << iter << std::endl;
             break;
         }
@@ -175,7 +175,7 @@ int main() {
     std::vector<double> davidson_eigenvalues;
 
     // Perform Davidson method
-    davidson(H, k, 50, davidson_eigenvalues);
+    davidson(H, k, 5, davidson_eigenvalues);
 
     // Print eigenvalues for Davidson method
     std::cout << "Davidson Method Eigenvalues: ";

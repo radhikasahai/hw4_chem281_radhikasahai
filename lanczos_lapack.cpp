@@ -3,7 +3,7 @@
 #include <tuple>
 #include <random>
 #include <lapacke.h>  
-// g++ -o lanczos_lapack lanczos_lapack.cpp -std=c++17 -I/opt/homebrew/Cellar/lapack/3.12.0/include -L/opt/homebrew/lib -llapacke -llapack -lblas
+// g++ -o lanczos_lapack1 lanczos_lapack1.cpp -std=c++17 -I/opt/homebrew/Cellar/lapack/3.12.0/include -L/opt/homebrew/lib -llapacke -llapack -lblas
 
 class Vector {
 private:
@@ -577,7 +577,7 @@ void lanczos(SparseMatrix &H, int k) { //reference to H matrix
         }
     }
 
-    //Diagonilze Tridigonal Matrix thingy 
+   
 
     // Compute eigenvalues and eigenvectors
     try {
@@ -606,7 +606,7 @@ int main() {
     H.insert(2,2,4);
 
     int k = 3; // Subspace size
-    // lanczos(H, k);
-    davidson(H, k, 500);
+    lanczos(H, k);
+    davidson(H, k, 5);
     return 0;
 }
