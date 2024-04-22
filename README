@@ -1,0 +1,101 @@
+utils.h 
+This utilities library is designed to facilitate high-performance numerical computations, particularly those involving vectors and matrices. It includes classes and functions for creating and manipulating dense and sparse matrices, vectors, and provides capabilities to perform matrix-vector operations, matrix decomposition, and solving eigenvalue problems using LAPACK.
+
+Key Components
+Vector Class:
+Supports basic vector operations such as addition, subtraction, multiplication (element-wise and by scalar), and division.
+Provides methods to calculate magnitude, normalize the vector, and compute dot products.
+Includes a method to populate a vector with random values uniformly distributed between 0 and 1.
+DenseMatrix Class:
+Supports matrix operations including addition, subtraction, absolute value computation, and matrix multiplication.
+Provides a method for matrix transposition.
+Includes functionality to resize the matrix and access its raw data pointer for interoperability with libraries like LAPACK.
+Supports computing the magnitude (Frobenius norm) of the matrix.
+SparseMatrix Class:
+Efficiently handles matrices with a large number of zero elements.
+Supports operations such as matrix-vector multiplication and orthogonalization.
+Capable of converting sparse matrix representation to dense format.
+Provides methods to insert non-zero values and fill the matrix randomly following a normal distribution.
+Utility Functions:
+solve_eigensystem(DenseMatrix &A): A wrapper function to compute eigenvalues and eigenvectors of a real symmetric matrix using LAPACK's dsyev routine.
+Dependencies
+C++ Standard: C++17
+External Libraries: LAPACK, BLAS, LAPACKE
+Ensure that these libraries are correctly installed and linked during compilation. Example compilation command:
+bash
+Copy code
+g++ -o your_program your_program.cpp -std=c++17 -I/opt/homebrew/Cellar/lapack/3.12.0/include -L/opt/homebrew/lib -llapacke -llapack -lblas
+Usage
+Include the utility header in your C++ project to access vector and matrix functionalities. Example:
+
+cpp
+Copy code
+#include "utils.h"
+Instantiate and manipulate vectors and matrices as needed. For detailed usage, refer to the method descriptions within each class.
+
+Example
+Here's a simple example demonstrating the creation and manipulation of a vector:
+
+cpp
+Copy code
+#include "utils.h"
+
+int main() {
+    Vector myVector(10);  // Create a vector of size 10
+    myVector.randu();     // Populate with random values
+    myVector.multiply(2); // Multiply each element by 2
+    myVector.print();     // Output the vector
+
+    return 0;
+}
+This example creates a vector of size 10, fills it with random values, doubles each element, and then prints the vector to the standard output.
+
+Compilation and Running
+To compile and run a program using this library, ensure that the LAPACK and BLAS libraries are linked, as shown in the provided compilation command.
+
+
+
+
+
+solvers.cpp
+The solvers.cpp file contains implementations for two advanced numerical algorithms used for finding eigenvalues of large sparse matrices: the Davidson and Lanczos methods. These methods are particularly useful for problems in quantum chemistry and physics where the diagonalization of large Hamiltonian matrices is required. Below is a detailed explanation of the contents and functionality of the solvers.cpp file, suitable for inclusion in a README file:
+
+Overview
+This C++ program implements the Davidson and Lanczos methods for eigenvalue calculations using sparse matrix representations. It relies on the utilities defined in the utils.h header, which includes definitions for handling vectors and matrices, both dense and sparse.
+
+Key Components
+Davidson Method (davidson function):
+Purpose: Used to iteratively refine a subspace in order to find a few eigenvalues and eigenvectors of a large sparse matrix.
+Parameters:
+SparseMatrix &H: The Hamiltonian or the matrix for which eigenvalues are sought.
+int k: The number of desired eigenvalues.
+int max_iter: The maximum number of iterations to perform.
+std::vector<double> &eigenvalues: A vector to store the calculated eigenvalues.
+Process:
+Initializes a matrix B with random values and performs iterative orthogonalization and matrix multiplications to refine the subspace.
+Applies the Davidson correction to accelerate convergence.
+Checks for convergence based on the magnitude of the residual vector and prints the results.
+Lanczos Method (lanczos function):
+Purpose: Efficiently computes a few eigenvalues of a large symmetric sparse matrix, using a tridiagonalization approach.
+Parameters:
+SparseMatrix &H: The matrix for which eigenvalues are sought.
+int k: The number of eigenvalues to compute.
+std::vector<double> &eigenvalues: A vector to store the calculated eigenvalues.
+Process:
+Starts with a random vector, orthogonalizes it, and uses it to build a tridiagonal matrix T.
+Repeatedly applies the matrix to refine the tridiagonal representation.
+Uses a dense matrix diagonalization (from utils.h) on T to find eigenvalues, which are approximations to the original matrix's eigenvalues.
+Dependencies
+C++17
+LAPACK, BLAS, and LAPACKE libraries for numerical operations, especially matrix decompositions.
+utils.h: A header file included in the same directory as solvers.cpp, providing necessary data structures and functions.
+Compilation Instructions
+To compile this program, ensure that the necessary libraries are correctly installed and linked. Use the following command:
+
+bash
+Copy code
+g++ -o solvers solvers.cpp -std=c++17 -I/opt/homebrew/Cellar/lapack/3.12.0/include -L/opt/homebrew/lib -llapacke -llapack -lblas
+
+test.cpp
+Times the davidson and lanczos with different sparsities. Here we can see that the simpler lacnoz is faster. Also the more sparse the matrix the slower the code for both algorithims 
+

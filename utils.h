@@ -1,3 +1,6 @@
+#ifndef UTILS_H
+#define UTILS_H
+
 #include <iostream>
 #include <vector>
 #include <tuple>
@@ -438,3 +441,5 @@ inline std::tuple<Vector, DenseMatrix> solve_eigensystem(DenseMatrix &A) {
     return {E, A};
 }
 
+
+#endif // UTILS_H

@@ -1,6 +1,3 @@
-
-
-
 #include <iostream>
 #include <vector>
 #include <tuple>
@@ -158,65 +155,4 @@ void lanczos(SparseMatrix &H, int k, std::vector<double> &eigenvalues) { //refer
     }
 
 }   
-
-// int main() {
-
-//     // Create a sparse matrix with 3 rows and 3 columns
-//     SparseMatrix H(3, 3);
-
-//     // Insert some non-zero elements
-//     H.insert(0, 0, 1); // Element at (0, 0)
-//     H.insert(0,2,2);
-//     H.insert(1,1,3);
-//     H.insert(2,0,2);
-//     H.insert(2,2,4);
-
-//     int k = 3; // Subspace size
-//     //lanczos(H, k);
-//     davidson(H, k, 50);
-//     return 0;
-// }
-
-int main() {
-
-    // Create a sparse matrix with 3 rows and 3 columns
-    SparseMatrix H(3, 3);
-
-    // Insert some non-zero elements
-    H.insert(0, 0, 1); // Element at (0, 0)
-    H.insert(0,2,2);
-    H.insert(1,1,3);
-    H.insert(2,0,2);
-    H.insert(2,2,4);
-
-    int k = 3; // Subspace size
-    
-    // Store eigenvalues for Davidson method
-    std::vector<double> davidson_eigenvalues;
-
-    // Perform Davidson method
-    davidson(H, k, 50, davidson_eigenvalues);
-
-    // Print eigenvalues for Davidson method
-    std::cout << "Eigenvalues (Davidson): ";
-    for (double val : davidson_eigenvalues) {
-        std::cout << val << " ";
-    }
-    std::cout << std::endl;
-
-    // Store eigenvalues for Lanczos method
-    std::vector<double> lanczos_eigenvalues;
-
-    // Perform Lanczos method
-    lanczos(H, k, lanczos_eigenvalues);
-
-    // Print eigenvalues for Lanczos method
-    std::cout << "Eigenvalues (Lanczos): ";
-    for (double val : lanczos_eigenvalues) {
-        std::cout << val << " ";
-    }
-    std::cout << std::endl;
-
-    return 0;
-}
 
